@@ -1,0 +1,673 @@
+<Window x:Class="FatalisOverlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cv="clr-namespace:FatalisOverlay.Converters"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        Title="Fatalis Overlay"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        MinWidth="280" MinHeight="60"
+        Width="300" Height="Auto" SizeToContent="Height"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <cv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <cv:InverseBoolToVisibilityConverter x:Key="InvBoolToVis"/>
+        <sys:Double x:Key="Phase1">78</sys:Double>
+        <sys:Double x:Key="Phase2">50</sys:Double>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Full overlay -->
+        <Border CornerRadius="8" Padding="12"
+                Background="{Binding Config.BackgroundColor, Mode=OneWay}"
+                BorderBrush="#44FFFFFF" BorderThickness="1"
+                Visibility="{Binding Data.IsFatalis, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+            <Grid x:Name="FullOverlay">
+                <Grid.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding Config.Scale, Mode=OneWay}"
+                            ScaleY="{Binding Config.Scale, Mode=OneWay}"/>
+                </Grid.LayoutTransform>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ═══ Row 0: Quest Timer ═══ -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6"
+                            Visibility="{Binding Config.ShowQuestTimer, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                    <TextBlock FontSize="12" VerticalAlignment="Center">
+                        <Run Text="任务时间 " Foreground="#AAA"/>
+                        <Run Text="{Binding Data.QuestElapsed, Mode=OneWay}" Foreground="#FFF" FontWeight="Bold"/>
+                    </TextBlock>
+                    <TextBlock FontSize="12" VerticalAlignment="Center"
+                               Margin="4,0,0,0"
+                               Visibility="{Binding Data.IsEnraged, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Run Text="⚡ " Foreground="#F44336"/>
+                        <Run Text="{Binding Data.EnrageCountdown, Mode=OneWay}" Foreground="#FFF" FontWeight="Bold"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- ═══ Row 1: Health ═══ -->
+                <Grid Grid.Row="1" Margin="0,0,0,6"
+                      Visibility="{Binding Config.ShowHealth, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <TextBlock Text="黑龙" Foreground="#FFF" FontSize="15" FontWeight="Bold"
+                               Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock FontSize="13" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF"/>
+                            <Run Text=" / " Foreground="#888"/>
+                            <Run Text="{Binding Data.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF"/>
+                            <Run Text="{Binding Data.HealthPercent, Mode=OneWay, StringFormat={}  ({0:F1}%)}" Foreground="#AAA"/>
+                        </TextBlock>
+                    </StackPanel>
+                    <Grid Grid.Row="1" Height="10" x:Name="HealthGauge" Margin="0,2,0,0">
+                        <Border Background="#333" CornerRadius="3" BorderBrush="#555" BorderThickness="1"/>
+                        <Border Background="{Binding Config.HealthColor, Mode=OneWay}" CornerRadius="3" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.HealthPercent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="HealthGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                        </Border>
+                        <!-- Phase markers: 78% and 50% -->
+                        <Border Width="2" Background="#CCFF0000" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                Opacity="0.85" CornerRadius="0">
+                            <Border.Margin>
+                                <MultiBinding Converter="{x:Static cv:PercentToLeftMarginConverter.Instance}">
+                                    <Binding Source="{StaticResource Phase1}"/>
+                                    <Binding Path="ActualWidth" ElementName="HealthGauge" Mode="OneWay"/>
+                                </MultiBinding>
+                            </Border.Margin>
+                        </Border>
+                        <Border Width="2" Background="#CCFF0000" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                Opacity="0.85" CornerRadius="0">
+                            <Border.Margin>
+                                <MultiBinding Converter="{x:Static cv:PercentToLeftMarginConverter.Instance}">
+                                    <Binding Source="{StaticResource Phase2}"/>
+                                    <Binding Path="ActualWidth" ElementName="HealthGauge" Mode="OneWay"/>
+                                </MultiBinding>
+                            </Border.Margin>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ═══ Row 2: Counterattack + AI + Distance ═══ -->
+                <StackPanel Grid.Row="2" Margin="0,0,0,6">
+                    <!-- Counterattack -->
+                    <Grid Visibility="{Binding Data.HasCounterattack, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid Visibility="{Binding Config.ShowCounterattack, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="下压值" Foreground="#FF9800" FontSize="13" FontWeight="Bold"
+                               Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock FontSize="12" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.CounterattackDisplay, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF"/>
+                            <Run Text=" / " Foreground="#888"/>
+                            <Run Text="{Binding Data.CounterattackMaxDisplay, Mode=OneWay}" Foreground="#888"/>
+                            </TextBlock>
+                            <TextBlock Text=" P3" Foreground="#F44336" FontSize="11" VerticalAlignment="Center"
+                               Visibility="{Binding Data.CounterattackScaled, Mode=OneWay, Converter={StaticResource BoolToVis}}"
+                               Margin="4,0,0,0" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Grid Grid.Row="1" Height="8" x:Name="CounterGauge" Margin="0,2,0,0">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border Background="{Binding Config.CounterattackColor, Mode=OneWay}" CornerRadius="2"
+                            HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.CounterattackPercent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="CounterGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    <!-- AI + Distance info line -->
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock FontSize="11" VerticalAlignment="Center"
+                               Visibility="{Binding Config.ShowAiDecision, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Run Text="AI: " Foreground="#888"/>
+                            <Run Text="{Binding Data.AiDist, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="m/" Foreground="#888"/>
+                            <Run Text="{Binding Data.AiAngle, Mode=OneWay, StringFormat={}{0:F1}}" Foreground="#FFF"/>
+                            <Run Text="°" Foreground="#888"/>
+                        </TextBlock>
+                        <TextBlock FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"
+                               Visibility="{Binding Config.ShowDistance, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Run Text="距: " Foreground="#888"/>
+                            <Run Text="{Binding Data.PlayerDistance, Mode=OneWay, StringFormat={}{0:F1}}" Foreground="#FFF"/>
+                            <Run Text="m" Foreground="#888"/>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ═══ Row 3: Parts ═══ -->
+                <StackPanel Grid.Row="3" Margin="0,0,0,4">
+                    <!-- Each part line is individually togglable -->
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartHead, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="头" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartHead.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartHeadGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartHead.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartHeadGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartHead.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartHead.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartHeadGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartHead.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartHead.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            <Run Text="{Binding Data.PartHead.BreakText, Mode=OneWay}" Foreground="#F44336"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartChest, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="胸" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartChest.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartChestGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartChest.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartChestGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartChest.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartChest.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartChestGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartChest.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartChest.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            <Run Text="{Binding Data.PartChest.BreakText, Mode=OneWay}" Foreground="#F44336"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartLArm, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="左手" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartLArm.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartLArmGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartLArm.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartLArmGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartLArm.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartLArm.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartLArmGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartLArm.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartLArm.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartRArm, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="右手" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartRArm.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartRArmGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartRArm.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartRArmGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartRArm.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartRArm.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartRArmGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartRArm.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartRArm.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartLLeg, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="左腿" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartLLeg.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartLLegGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartLLeg.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartLLegGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartLLeg.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartLLeg.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartLLegGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartLLeg.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartLLeg.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartRLeg, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="右腿" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartRLeg.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartRLegGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartRLeg.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartRLegGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartRLeg.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartRLeg.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartRLegGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartRLeg.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartRLeg.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartNeck, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="脖子" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartNeck.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartNeckGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartNeck.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartNeckGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartNeck.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartNeck.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartNeckGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartNeck.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartNeck.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartLWing, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="左翼" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartLWing.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartLWingGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartLWing.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartLWingGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartLWing.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartLWing.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartLWingGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartLWing.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartLWing.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            <Run Text="{Binding Data.PartLWing.BreakText, Mode=OneWay}" Foreground="#F44336"/>
+                            
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartRWing, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="右翼" Foreground="#CCC" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Data.PartRWing.Health, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#FFF" FontSize="10" VerticalAlignment="Center" Margin="4,0"/>
+                        <Grid Grid.Column="2" Height="6" Margin="4,0" x:Name="PartRWingGauge">
+                            <Border Background="#333" CornerRadius="2" BorderBrush="#555" BorderThickness="1"/>
+                            <Border CornerRadius="2" Background="{Binding Config.PartColor, Mode=OneWay}" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.PartRWing.Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="PartRWingGauge" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                        
+                            <Border Height="2" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#CCFFFFFF" CornerRadius="1" Visibility="{Binding Data.PartRWing.IsTenderized, Mode=OneWay, Converter={StaticResource BoolToVis}}"><Border.Width><MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}"><Binding Path="Data.PartRWing.TenderizePercent" Mode="OneWay"/><Binding Path="ActualWidth" ElementName="PartRWingGauge" Mode="OneWay"/></MultiBinding></Border.Width></Border>
+                        </Grid>
+                        <TextBlock Grid.Column="3" Foreground="#FFF" FontSize="10" VerticalAlignment="Center">
+                            <Run Text="{Binding Data.PartRWing.MaxHealth, Mode=OneWay, StringFormat={}{0:N0}}" Foreground="#AAA"/>
+                            <Run Text=" " Foreground="#888"/>
+                            <Run Text="{Binding Data.PartRWing.Counter, Mode=OneWay, StringFormat=x{0}}" Foreground="#FF9800"/>
+                            <Run Text="{Binding Data.PartRWing.BreakText, Mode=OneWay}" Foreground="#F44336"/>
+                            
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+
+                <!-- ═══ Row 4: Ailments ═══ -->
+                <WrapPanel Grid.Row="4" Orientation="Horizontal">
+                    <!-- Poison -> Id 0 -->
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentPoison, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="毒" Foreground="#9C27B0" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[1].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[1].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[1].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail1Bar"
+                              Visibility="{Binding Data.Ailments[1].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#9C27B0" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[1].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail0Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentPara, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="麻" Foreground="#FFEB3B" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[2].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[2].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[2].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail2Bar"
+                              Visibility="{Binding Data.Ailments[2].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#FFEB3B" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[2].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail1Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentSleep, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="眠" Foreground="#64B5F6" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[3].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[3].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[3].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail3Bar"
+                              Visibility="{Binding Data.Ailments[3].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#64B5F6" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[3].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail2Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentBlast, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="爆" Foreground="#F44336" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[4].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[4].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[4].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail4Bar"
+                              Visibility="{Binding Data.Ailments[4].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#F44336" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[4].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail3Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentStun, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="晕" Foreground="#FFC107" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[7].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[7].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[7].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail7Bar"
+                              Visibility="{Binding Data.Ailments[7].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#FFC107" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[7].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail4Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentExhaust, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="减气" Foreground="#81C784" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[6].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[6].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[6].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail6Bar"
+                              Visibility="{Binding Data.Ailments[6].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#81C784" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[6].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail5Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
+                            Visibility="{Binding Config.ShowAilmentMount, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="骑" Foreground="#4FC3F7" FontSize="9" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="{Binding Data.Ailments[5].Buildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[5].MaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text=" x" Foreground="#888"/>
+                            <Run Text="{Binding Data.Ailments[5].TriggerCount, Mode=OneWay, StringFormat={}{0}}" Foreground="#FF9800"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="Ail5Bar"
+                              Visibility="{Binding Data.Ailments[5].IsActive, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#4FC3F7" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.Ailments[5].Percent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="Ail5Bar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <!-- Enrage Id=99: countdown at quest timer row, buildup only when not enraged -->
+                    <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="44"
+                            Visibility="{Binding Config.ShowAilmentEnrage, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center">
+                            <Run Text="怒" Foreground="#EF5350"/>
+                            <Run Text="{Binding Data.IsEnraged, Mode=OneWay, StringFormat= ⚡}" Foreground="#F44336"/>
+                            </TextBlock>
+                            <TextBlock Text="发怒中" FontSize="9" HorizontalAlignment="Center" Foreground="#F44336"
+                               Visibility="{Binding Data.IsEnraged, Mode=OneWay, Converter={StaticResource BoolToVis}}"/>
+                            <TextBlock FontSize="9" HorizontalAlignment="Center"
+                               Visibility="{Binding Data.IsEnraged, Mode=OneWay, Converter={StaticResource InvBoolToVis}}">
+                            <Run Text="{Binding Data.EnrageBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            <Run Text="/" Foreground="#888"/>
+                            <Run Text="{Binding Data.EnrageMaxBuildup, Mode=OneWay, StringFormat={}{0:F0}}" Foreground="#FFF"/>
+                            </TextBlock>
+                            <Grid Height="3" Margin="0,1,0,0" x:Name="EnrageBar"
+                              Visibility="{Binding Data.IsEnraged, Mode=OneWay, Converter={StaticResource InvBoolToVis}}">
+                            <Border Background="#333" CornerRadius="1"/>
+                            <Border CornerRadius="1" Background="#EF5350" HorizontalAlignment="Left">
+                            <Border.Width>
+                            <MultiBinding Converter="{x:Static cv:GaugeWidthConverter.Instance}">
+                            <Binding Path="Data.EnrageBuildupPercent" Mode="OneWay"/>
+                            <Binding Path="ActualWidth" ElementName="EnrageBar" Mode="OneWay"/>
+                            </MultiBinding>
+                            </Border.Width>
+                            </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
+
+            </Grid>
+        </Border>
+
+        <!-- Minimal status bar -->
+        <Border CornerRadius="6" Padding="10,6"
+                Background="#CC1A1A1A"
+                BorderBrush="#44FFFFFF" BorderThickness="1"
+                Visibility="{Binding Data.IsFatalis, Mode=OneWay, Converter={StaticResource InvBoolToVis}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🐉" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock VerticalAlignment="Center" FontSize="12">
+                    <Run Text="黑龙监控中" Foreground="#AAA"/>
+                    <Run Text=" · " Foreground="#555"/>
+                    <Run Text="{Binding Data.StatusText, Mode=OneWay}" Foreground="#FFEB3B"/>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
