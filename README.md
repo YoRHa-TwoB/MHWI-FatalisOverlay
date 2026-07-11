@@ -36,8 +36,17 @@ dotnet build -c Release
 
 ## 致谢
 
-- [mhw-radar](https://github.com/cursecat/mhw-radar) — 内存偏移参考
+- [mhw-radar](https://github.com/stellarling/mhw-radar) — 内存偏移参考
 - [HunterPie](https://github.com/Haato3o/HunterPie-v2) — 结构体定义参考
+
+## 免责声明
+
+本项目为社区制作的免费开源工具，仅供学习交流使用。
+
+- 本工具**不修改任何游戏文件**，仅读取游戏运行时内存数据
+- Monster Hunter: World 及所有相关商标、角色、素材版权归 **CAPCOM Co., Ltd.** 所有
+- 本工具与 CAPCOM 无任何关联，亦未获得 CAPCOM 认可或授权
+- 使用本工具产生的一切后果由用户自行承担
 
 ## License
 
