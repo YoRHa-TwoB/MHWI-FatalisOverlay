@@ -36,7 +36,7 @@ dotnet build -c Release
 
 ## 致谢
 
-- [mhw-radar](https://github.com/stellarling/mhw-radar) — 内存偏移参考
+- [mhw-radar](https://github.com/stellarling/mhw-radar) — 内存偏移参考、黑龙招式名称对应表
 - [HunterPie](https://github.com/Haato3o/HunterPie-v2) — 结构体定义参考
 
 ## 免责声明
