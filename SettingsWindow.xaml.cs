@@ -50,6 +50,11 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void ViewLogs_Click(object sender, RoutedEventArgs e)
+    {
+        new LogViewerWindow { Owner = this }.Show();
+    }
+
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         _vm.SaveConfig();

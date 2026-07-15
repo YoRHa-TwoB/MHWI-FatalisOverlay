@@ -32,6 +32,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         _config = AppConfig.Load();
         _syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
+        BattleLogger.LoadActionNames();
     }
 
     public void StartPolling()
@@ -69,6 +70,9 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
                     }
 
                     var data = _processService.ReadGameData();
+
+                    BattleLogger.Log(data, _config.ShowBattleLog);
+
                     if (!data.InQuest)
                         _processService.ResetOnNewQuest();
 

@@ -114,10 +114,28 @@ public class ProcessService
             ReadAction(data, fatalisPtr);
             ReadEnrage(data, fatalisPtr);
             ReadPlayerDistance(data, fatalisPtr);
+            ReadPlayerHealth(data);
+            ReadSpiritGauge(data);
         }
         catch { }
 
         return data;
+    }
+
+    private void ReadSpiritGauge(GameData data)
+    {
+        // WEAPON_MECHANICS_ADDRESS → WEAPON_MECHANICS_OFFSETS [0x50, 0x76B0, 0x0]
+        // ReadAsync: reads ptr at address, adds offset.  Last offset 0x0 = no-op.
+        var ptr1 = MemoryReader.ReadPointer(_processHandle, _gameBase + PLAYER_BASE);
+        if (ptr1 == IntPtr.Zero) return;
+        var ptr2 = MemoryReader.ReadPointer(_processHandle, ptr1 + 0x50);
+        if (ptr2 == IntPtr.Zero) return;
+        var structAddr = MemoryReader.ReadPointer(_processHandle, ptr2 + 0x76B0);
+        if (structAddr == IntPtr.Zero) return;
+        // MHWLongSwordStructure (LayoutKind.Explicit)
+        data.SpiritBuildUp = MemoryReader.Read<float>(_processHandle, structAddr + 0x2368) * 100f;
+        data.SpiritLevel = MemoryReader.Read<int>(_processHandle, structAddr + 0x2370);
+        data.SpiritTimer = MemoryReader.Read<float>(_processHandle, structAddr + 0x2374);
     }
 
     // ── Quest ──
@@ -141,6 +159,7 @@ public class ProcessService
                 // LiterallyWhyCapcom: value / 60.0f = remaining seconds
                 double remainingSecs = timerRaw / 60.0;
                 double elapsed = Math.Max(0, GetQuestMaxSeconds(questId) - remainingSecs);
+                data.QuestElapsedSeconds = elapsed;
                 var ts = TimeSpan.FromSeconds(elapsed);
                 data.QuestElapsed = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
             }
@@ -421,7 +440,25 @@ public class ProcessService
         float my = MemoryReader.Read<float>(_processHandle, (IntPtr)(monsterPtr + 0x164));
         float mz = MemoryReader.Read<float>(_processHandle, (IntPtr)(monsterPtr + 0x168));
 
+        data.PlayerY = py;
         data.PlayerDistance = MathF.Sqrt((px - mx) * (px - mx) + (pz - mz) * (pz - mz));
+    }
+
+    // ── Player Health ──
+
+    private void ReadPlayerHealth(GameData data)
+    {
+        // EQUIPMENT_ADDRESS → PLAYER_BASIC_INFORMATION_OFFSETS: [0x50, 0x7630, 0x0]
+        var ptr1 = MemoryReader.ReadPointer(_processHandle, _gameBase + PLAYER_BASE);
+        if (ptr1 == IntPtr.Zero) return;
+        var ptr2 = MemoryReader.ReadPointer(_processHandle, ptr1 + 0x50);
+        if (ptr2 == IntPtr.Zero) return;
+        var hudPtr = MemoryReader.ReadPointer(_processHandle, ptr2 + 0x7630);
+        if (hudPtr == IntPtr.Zero) return;
+
+        // MHWHudStructure: MaxHealth at +0x60, Health at +0x64
+        data.PlayerMaxHealth = MemoryReader.Read<float>(_processHandle, hudPtr + 0x60);
+        data.PlayerHealth = MemoryReader.Read<float>(_processHandle, hudPtr + 0x64);
     }
 
     public void ResetOnNewQuest() { _counterattackScaled = false; }

@@ -11,4 +11,10 @@
     <LangVersion>14.0</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="action_names.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

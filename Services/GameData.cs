@@ -65,8 +65,19 @@ public class GameData
     public double EnrageBuildupPercent => EnrageMaxBuildup > 0
         ? EnrageBuildup / EnrageMaxBuildup * 100 : 0;
 
+    // Quest numeric
+    public double QuestElapsedSeconds { get; set; }
+
     // Player
+    public float PlayerHealth { get; set; }
+    public float PlayerMaxHealth { get; set; }
+    public int SpiritLevel { get; set; }      // 太刀刃等级: 0=无 1=白 2=黄 3=红
+    public float SpiritBuildUp { get; set; }  // 当前等级积蓄 (0-100)
+    public float SpiritTimer { get; set; }    // 当前等级剩余时间
+    public string SpiritLevelText => SpiritLevel switch { 3 => "🔴红", 2 => "🟡黄", 1 => "⚪白", _ => "" };
+    public string SpiritLevelColor => SpiritLevel switch { 3 => "#F44336", 2 => "#FFEB3B", 1 => "#E0E0E0", _ => "#888" };
     public float PlayerDistance { get; set; }
+    public float PlayerY { get; set; }
 
     // Action
     public int ActionId { get; set; }

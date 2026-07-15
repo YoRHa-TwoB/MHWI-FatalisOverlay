@@ -10,6 +10,7 @@ public class AppConfig : INotifyPropertyChanged
     private bool _showHealth = true;
     private bool _showCounterattack = true;
     private bool _showAiDecision = true;
+    private bool _showBattleLog;
     private bool _showQuestTimer = true;
     private bool _showDistance = true;
 
@@ -49,6 +50,7 @@ public class AppConfig : INotifyPropertyChanged
     public bool ShowAiDecision { get => _showAiDecision; set { _showAiDecision = value; OnPropertyChanged(); } }
     public bool ShowQuestTimer { get => _showQuestTimer; set { _showQuestTimer = value; OnPropertyChanged(); } }
     public bool ShowDistance { get => _showDistance; set { _showDistance = value; OnPropertyChanged(); } }
+    public bool ShowBattleLog { get => _showBattleLog; set { _showBattleLog = value; OnPropertyChanged(); } }
 
     // Part toggles
     public bool ShowPartHead { get => _showPartHead; set { _showPartHead = value; OnPropertyChanged(); } }

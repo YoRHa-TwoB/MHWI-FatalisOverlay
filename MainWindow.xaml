@@ -52,6 +52,8 @@
                         <Run Text="⚡ " Foreground="#F44336"/>
                         <Run Text="{Binding Data.EnrageCountdown, Mode=OneWay}" Foreground="#FFF" FontWeight="Bold"/>
                     </TextBlock>
+                    <TextBlock Text="{Binding Data.SpiritLevelText, Mode=OneWay}" FontSize="12" Margin="4,0,0,0"
+                               Foreground="{Binding Data.SpiritLevelColor, Mode=OneWay}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- ═══ Row 1: Health ═══ -->
