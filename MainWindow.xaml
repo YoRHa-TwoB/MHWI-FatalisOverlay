@@ -157,6 +157,21 @@
                             <Run Text="{Binding Data.PlayerDistance, Mode=OneWay, StringFormat={}{0:F1}}" Foreground="#FFF"/>
                             <Run Text="m" Foreground="#888"/>
                         </TextBlock>
+                        <TextBlock FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"
+                               Visibility="{Binding Config.ShowPlatform, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="非高台"/>
+                                    <Setter Property="Foreground" Value="#888"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Data.IsPlatform}" Value="True">
+                                            <Setter Property="Text" Value="对高台"/>
+                                            <Setter Property="Foreground" Value="#FF9800"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </StackPanel>
 

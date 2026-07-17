@@ -14,6 +14,9 @@ public class ProcessService
     private long _gameBase;
     private int _pid;
     private bool _counterattackScaled;
+    private float _lastAiDist = -1;
+    private float _lastAiAngle = -1;
+    private bool _displayIsPlatform;
 
     public IntPtr Handle => _processHandle;
     public long GameBase => _gameBase;
@@ -112,6 +115,7 @@ public class ProcessService
             ReadMonsterAilments(data, fatalisPtr);
             ReadAiDecision(data);
             ReadAction(data, fatalisPtr);
+            ReadPlatform(data);
             ReadEnrage(data, fatalisPtr);
             ReadPlayerDistance(data, fatalisPtr);
             ReadPlayerHealth(data);
@@ -424,6 +428,30 @@ public class ProcessService
     }
 
     // ── Player Distance ──
+
+    // ── Platform detection ──
+
+    private void ReadPlatform(GameData data)
+    {
+        // Capture on AiDist/AiAngle change (proxy for new BT evaluation)
+        if (Math.Abs(data.AiDist - _lastAiDist) > 0.01f || Math.Abs(data.AiAngle - _lastAiAngle) > 0.01f)
+        {
+            _lastAiDist = data.AiDist;
+            _lastAiAngle = data.AiAngle;
+
+            var ptr1 = MemoryReader.ReadPointer(_processHandle, _gameBase + PLAYER_BASE);
+            if (ptr1 != IntPtr.Zero)
+            {
+                var playerEnt = MemoryReader.ReadPointer(_processHandle, ptr1 + 0x50);
+                if (playerEnt != IntPtr.Zero)
+                {
+                    int val = MemoryReader.Read<int>(_processHandle, playerEnt + 0x110C);
+                    _displayIsPlatform = (val & 0x200000) != 0;
+                }
+            }
+        }
+        data.IsPlatform = _displayIsPlatform;
+    }
 
     private void ReadPlayerDistance(GameData data, long monsterPtr)
     {

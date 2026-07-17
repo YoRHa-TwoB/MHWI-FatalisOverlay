@@ -126,6 +126,12 @@ public class LogEntry
 
     public string DetailDist => $"距离 {Dist:F0}m";
     public string DetailAi => Type == "action" ? $"  |  AI {Ai_d:F0}m / {Ai_a:F0}°" : "";
+
+    [System.Text.Json.Serialization.JsonPropertyName("platform")]
+    public string Platform { get; set; } = "";
+
+    public string DetailPlatform => Type == "action" ? $"  |  {Platform}" : "";
+    public string PlatformColor => Platform == "对高台" ? "#FF9800" : "#888";
     public string DetailHead => $"头 {H_hp}";
     public string DetailChest => $"胸 {C_hp}";
     public string DetailCa => $"下压 {Ca}";

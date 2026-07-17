@@ -81,6 +81,9 @@ public class GameData
 
     // Action
     public int ActionId { get; set; }
+
+    // Platform detection (playerEntity +0x110C, bit21)
+    public bool IsPlatform { get; set; }
 }
 
 public class FatalisPart

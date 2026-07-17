@@ -129,9 +129,10 @@
                                                     <Run Text="{Binding SpiritText, Mode=OneWay}" Foreground="{Binding SpiritColor, Mode=OneWay}" FontWeight="Bold"/>
                                                 </TextBlock>
                                                 <!-- Detail line: spaced out -->
-                                                <TextBlock FontSize="10" Foreground="#AAA" Margin="0,2,0,0">
+                                                <TextBlock FontSize="10" Foreground="#AAA" Margin="0,2,0,0" TextTrimming="CharacterEllipsis">
                                                     <Run Text="{Binding DetailDist, Mode=OneWay}"/>
                                                     <Run Text="{Binding DetailAi, Mode=OneWay}" Foreground="#999"/>
+                                                    <Run Text="{Binding DetailPlatform, Mode=OneWay}" Foreground="{Binding PlatformColor, Mode=OneWay}"/>
                                                 </TextBlock>
                                                 <!-- Inline bars -->
                                                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">

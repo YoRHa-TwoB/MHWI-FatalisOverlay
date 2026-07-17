@@ -180,7 +180,8 @@ public static class BattleLogger
             ca = (int)data.CounterattackDisplay,
             dist = Math.Round(data.PlayerDistance, 1),
             ai_d = Math.Round(data.AiDist, 1),
-            ai_a = Math.Round(data.AiAngle, 1)
+            ai_a = Math.Round(data.AiAngle, 1),
+            platform = data.IsPlatform ? "对高台" : "非高台"
         };
     }
 
