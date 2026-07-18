@@ -23,12 +23,19 @@ public partial class MainWindow : Window
 
         Closing += OnClosing;
         Loaded += OnLoaded;
+        IsVisibleChanged += OnVisibleChanged;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _vm.Config.PropertyChanged += OnConfigChanged;
         SyncWidth();
+    }
+
+    private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if ((bool)e.NewValue)
+            SyncWidth();
     }
 
     private void OnConfigChanged(object? sender, PropertyChangedEventArgs e)
