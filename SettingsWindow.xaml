@@ -173,7 +173,7 @@
             </StackPanel>
 
             <TextBlock Height="8"/>
-            <TextBlock Text="Made by YoRHaTwoB, v1.0"
+            <TextBlock Text="Made by YoRHaTwoB, v1.2"
                        Foreground="#FF9800" FontSize="10" HorizontalAlignment="Center" Margin="0,4"/>
         </StackPanel>
     </ScrollViewer>
