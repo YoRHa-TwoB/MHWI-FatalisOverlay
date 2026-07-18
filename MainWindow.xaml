@@ -8,8 +8,8 @@
         Background="Transparent" Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        MinWidth="280" MinHeight="60"
-        Width="300" Height="Auto" SizeToContent="Height"
+        MinWidth="240" MinHeight="60"
+        Width="260" Height="Auto" SizeToContent="Height"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         PreviewKeyDown="Window_PreviewKeyDown">
 

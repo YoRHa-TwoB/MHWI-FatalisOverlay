@@ -46,7 +46,7 @@ public partial class MainWindow : Window
 
     private void SyncWidth()
     {
-        Width = 300 * _vm.Config.Scale;
+        Width = 260 * _vm.Config.Scale;
     }
 
     private void OnClosing(object? sender, CancelEventArgs e)
