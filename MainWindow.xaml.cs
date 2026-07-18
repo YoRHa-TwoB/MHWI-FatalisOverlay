@@ -22,6 +22,24 @@ public partial class MainWindow : Window
         if (double.IsNaN(Top) || Top < -1000 || Top > 5000) Top = 100;
 
         Closing += OnClosing;
+        Loaded += OnLoaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        _vm.Config.PropertyChanged += OnConfigChanged;
+        SyncWidth();
+    }
+
+    private void OnConfigChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(_vm.Config.Scale))
+            SyncWidth();
+    }
+
+    private void SyncWidth()
+    {
+        Width = 300 * _vm.Config.Scale;
     }
 
     private void OnClosing(object? sender, CancelEventArgs e)
