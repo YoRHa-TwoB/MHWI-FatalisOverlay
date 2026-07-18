@@ -9,7 +9,7 @@
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         MinWidth="280" MinHeight="60"
-        Width="300" Height="Auto" SizeToContent="Height"
+        Height="Auto" SizeToContent="WidthAndHeight"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         PreviewKeyDown="Window_PreviewKeyDown">
 
