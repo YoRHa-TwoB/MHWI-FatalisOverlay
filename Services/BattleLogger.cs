@@ -17,6 +17,8 @@ public static class BattleLogger
     private static bool _lastIsEnraged;
     private static int _lastQuestId;
     private static bool _hasReachedArena; // 玩家是否曾经降到地面附近
+    private static float _lastAiDist = -1;
+    private static float _lastAiAngle = -1;
 
     // 招式名映射
     private static Dictionary<int, string> _actionNames = new();
@@ -41,6 +43,9 @@ public static class BattleLogger
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 _actionNames = entries?.ToDictionary(e => e.ActionId, e => e.Name)
                     ?? new Dictionary<int, string>();
+                // Also populate the THK path display lookup
+                Models.ThkCycleData.ActionNames = entries?.ToDictionary(
+                    e => (uint)e.ActionId, e => e.Name) ?? new();
             }
         }
         catch { /* 加载失败就用空映射，不影响日志功能 */ }
@@ -48,15 +53,16 @@ public static class BattleLogger
 
     private static string ResolveActionName(int actionId)
         => _actionNames.TryGetValue(actionId, out var name) ? name : "";
+    public static string GetActionName(int actionId)
+        => _actionNames.TryGetValue(actionId, out var name) ? name : $"ACT({actionId})";
 
     /// <summary>
     /// 每帧轮询时调用
     /// </summary>
-    public static void Log(GameData data, bool enabled)
+    public static void Log(GameData data, bool enabled, bool thkPathEnabled = true)
     {
         if (!data.IsFatalis || !data.InQuest)
         {
-            // 不在黑龙任务中，关闭当前日志
             if (_writer != null)
             {
                 WriteEntry(new { type = "session_end" });
@@ -71,7 +77,6 @@ public static class BattleLogger
             return;
         }
 
-        // 检测重开
         if (DetectNewSession(data))
         {
             if (_writer != null)
@@ -90,7 +95,13 @@ public static class BattleLogger
             ResetState(data);
         }
 
-        // 检测变化并写入
+        // Write THK cycles first (independent of action detection)
+        if (thkPathEnabled && data.PendingThkCycles.Count > 0 && _writer != null)
+        {
+            ThkCycleLogger.LogCycles(data.PendingThkCycles, _writer, data.AiDist, data.AiAngle);
+        }
+
+        // Write action/damage/enrage entries
         var changes = DetectChanges(data);
         foreach (var entry in changes)
             WriteEntry(entry);
@@ -130,18 +141,13 @@ public static class BattleLogger
     {
         var entries = new List<object>();
 
-        // 1. 消怒（优先处理，出现在招式变化之前）
+        // 1. 消怒
         if (_lastIsEnraged && !data.IsEnraged)
-        {
             entries.Add(new { type = "enrage_end", ts = data.QuestElapsedSeconds });
-        }
 
-        // 2. 招式变化
-        if (data.ActionId != _lastActionId)
-        {
-            var entry = BuildActionEntry(data);
-            if (entry != null) entries.Add(entry);
-        }
+        // 2. 招式变化 — detect via AI distance/angle change (more reliable than ActionID)
+        if (Math.Abs(data.AiDist - _lastAiDist) > 0.01f || Math.Abs(data.AiAngle - _lastAiAngle) > 0.01f)
+            entries.Add(BuildActionEntry(data));
 
         // 3. 进怒
         if (!_lastIsEnraged && data.IsEnraged)
@@ -160,11 +166,13 @@ public static class BattleLogger
         _lastActionId = data.ActionId;
         _lastMonsterHp = data.Health;
         _lastIsEnraged = data.IsEnraged;
+        _lastAiDist = data.AiDist;
+        _lastAiAngle = data.AiAngle;
 
         return entries;
     }
 
-    private static object? BuildActionEntry(GameData data)
+    private static object BuildActionEntry(GameData data)
     {
         return new
         {

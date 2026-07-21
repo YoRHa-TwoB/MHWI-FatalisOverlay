@@ -33,6 +33,28 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _config = AppConfig.Load();
         _syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
         BattleLogger.LoadActionNames();
+        LoadNackMap();
+    }
+
+    private static void LoadNackMap()
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nack_map_full.json");
+            if (!System.IO.File.Exists(path)) return;
+            var json = System.IO.File.ReadAllText(path);
+            var map = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+            if (map.TryGetProperty("cm_idx", out var cmi))
+                foreach (var e in cmi.EnumerateObject())
+                    Models.ThkCycleData.CmIdxToNack[int.Parse(e.Name)] = e.Value.GetInt32();
+            if (map.TryGetProperty("global_idx", out var gi))
+                foreach (var e in gi.EnumerateObject())
+                    Models.ThkCycleData.GlobalIdxToNack[int.Parse(e.Name)] = e.Value.GetInt32();
+            if (map.TryGetProperty("global_id", out var gd))
+                foreach (var e in gd.EnumerateObject())
+                    Models.ThkCycleData.GlobalIdToNack[int.Parse(e.Name)] = e.Value.GetInt32();
+        }
+        catch { }
     }
 
     public void StartPolling()
@@ -71,7 +93,10 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
                     var data = _processService.ReadGameData();
 
-                    BattleLogger.Log(data, _config.ShowBattleLog);
+                    // THK path tracking only active when battle log is also enabled
+                    bool thkEnabled = _config.ShowBattleLog && _config.ShowThkPath;
+                    _processService.SetThkTrackingEnabled(thkEnabled);
+                    BattleLogger.Log(data, _config.ShowBattleLog, thkEnabled);
 
                     if (!data.InQuest)
                         _processService.ResetOnNewQuest();

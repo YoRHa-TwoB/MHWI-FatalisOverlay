@@ -1,0 +1,2 @@
+请将THKLogger.dll复制到   \Monster Hunter World\nativePC\plugins 里面
+或者运行FatalisOverlay.exe会自动注入dll，但首次开启后需要重启游戏

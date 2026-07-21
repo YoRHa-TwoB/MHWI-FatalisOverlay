@@ -18,6 +18,12 @@ public class ProcessService
     private float _lastAiAngle = -1;
     private bool _displayIsPlatform;
 
+    // THK path tracking
+    private readonly ThkPathReader _thkReader = new();
+    private bool _thkDeployAttempted;
+    private Models.ThkCycleData? _persistentLastPath;
+    private readonly List<Models.ThkCycleData> _thkCycleBuffer = new(); // accumulates across frames
+
     public IntPtr Handle => _processHandle;
     public long GameBase => _gameBase;
     public bool IsConnected => _processHandle != IntPtr.Zero && _gameBase != 0;
@@ -70,11 +76,21 @@ public class ProcessService
 
         _processHandle = MemoryReader.OpenProcessHandle(_pid);
         _counterattackScaled = false;
+
+        // ── THK DLL deploy to nativePC/plugins/ (one-time) ──
+        if (!_thkDeployAttempted)
+        {
+            _thkDeployAttempted = true;
+            DllInjector.CreateSharedMemory();
+            DllInjector.EnsureDeployed();
+        }
+
         return _processHandle != IntPtr.Zero;
     }
 
     public void Disconnect()
     {
+        _thkReader.Disconnect();
         if (_processHandle != IntPtr.Zero)
             MemoryReader.CloseProcessHandle(_processHandle);
         _processHandle = IntPtr.Zero;
@@ -96,6 +112,12 @@ public class ProcessService
         {
             data.Connected = true;
             ReadQuestData(data);
+
+            // ── THK path reader — retry every cycle until connected ──
+            if (!_thkReader.IsConnected)
+            {
+                _thkReader.TryConnect();
+            }
 
             var fatalisPtr = FindFatalisMonster();
             if (fatalisPtr == 0)
@@ -120,6 +142,38 @@ public class ProcessService
             ReadPlayerDistance(data, fatalisPtr);
             ReadPlayerHealth(data);
             ReadSpiritGauge(data);
+
+            // ── THK path data ──
+            if (_thkReader.IsConnected)
+            {
+                var fresh = _thkReader.ReadNewCycles();
+                _thkCycleBuffer.AddRange(fresh);
+                while (_thkCycleBuffer.Count > 50) _thkCycleBuffer.RemoveAt(0);
+
+                // Use the latest cycle directly (one cycle = one move, node_000 → node_000)
+                if (_thkCycleBuffer.Count > 0)
+                    _persistentLastPath = _thkCycleBuffer[^1];
+
+                // Only pass NEW cycles to BattleLogger to avoid JSONL duplication
+                data.PendingThkCycles = fresh;
+            }
+            data.LastThkPath = _persistentLastPath;
+            // ── THK diagnostic ──
+            if (_thkReader.IsConnected && _thkReader.IsHookActive)
+            {
+                uint wc = _thkReader.WriteCycle;
+                string label = data.LastThkPath?.GetShortLabel() ?? "";
+                if (label.Length > 0)
+                    data.ThkDiag = $"🧠 {label}";
+                else if (_thkCycleBuffer.Count == 0)
+                    data.ThkDiag = "初始状态";
+                else
+                    data.ThkDiag = "初始状态";
+            }
+            else
+            {
+                data.ThkDiag = DllInjector.DiagStatus;
+            }
         }
         catch { }
 
@@ -433,7 +487,6 @@ public class ProcessService
 
     private void ReadPlatform(GameData data)
     {
-        // Capture on AiDist/AiAngle change (proxy for new BT evaluation)
         if (Math.Abs(data.AiDist - _lastAiDist) > 0.01f || Math.Abs(data.AiAngle - _lastAiAngle) > 0.01f)
         {
             _lastAiDist = data.AiDist;
@@ -489,5 +542,18 @@ public class ProcessService
         data.PlayerHealth = MemoryReader.Read<float>(_processHandle, hudPtr + 0x64);
     }
 
-    public void ResetOnNewQuest() { _counterattackScaled = false; }
+    /// <summary>
+    /// Enable/disable THK segment tracking at the DLL level.
+    /// When disabled, the DLL skips all path accumulation (zero overhead).
+    /// </summary>
+    public void SetThkTrackingEnabled(bool enabled)
+    {
+        _thkReader.TrackingEnabled = enabled;
+    }
+
+    public void ResetOnNewQuest() {
+        _counterattackScaled = false;
+        _persistentLastPath = null;
+        _thkCycleBuffer.Clear();
+    }
 }

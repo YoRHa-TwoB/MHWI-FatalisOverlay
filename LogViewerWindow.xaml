@@ -134,6 +134,12 @@
                                                     <Run Text="{Binding DetailAi, Mode=OneWay}" Foreground="#999"/>
                                                     <Run Text="{Binding DetailPlatform, Mode=OneWay}" Foreground="{Binding PlatformColor, Mode=OneWay}"/>
                                                 </TextBlock>
+                                                <!-- THK Path: small sub-line under action -->
+                                                <TextBlock FontSize="9" Foreground="#FF9800"
+                                                           Margin="0,1,0,0"
+                                                           Visibility="{Binding HasThkPath, Mode=OneWay, Converter={StaticResource BoolToVis}}"
+                                                           Text="{Binding ThkPath, Mode=OneWay}"
+                                                           TextTrimming="CharacterEllipsis"/>
                                                 <!-- Inline bars -->
                                                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,8,0">

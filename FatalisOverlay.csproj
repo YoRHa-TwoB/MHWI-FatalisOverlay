@@ -15,6 +15,17 @@
     <None Update="action_names.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="nack_map_full.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Embed THKLogger.dll for automatic injection -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\THKLogger\bin\THKLogger.dll">
+      <LogicalName>FatalisOverlay.THKLogger.dll</LogicalName>
+      <Visible>false</Visible>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

@@ -35,6 +35,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>  <!-- THK diagnostic -->
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -175,8 +176,14 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- ═══ Row 3: Parts ═══ -->
-                <StackPanel Grid.Row="3" Margin="0,0,0,4">
+                <!-- THK diagnostic (always visible for debugging) -->
+                <TextBlock Grid.Row="3" FontSize="9" Foreground="#FF9800"
+                           Text="{Binding Data.ThkDiag, Mode=OneWay}"
+                           Margin="0,1,0,4" TextWrapping="Wrap" MaxHeight="26"
+                           Visibility="{Binding Config.ShowThkPath, Mode=OneWay, Converter={StaticResource BoolToVis}}"/>
+
+                <!-- ═══ Row 4: Parts ═══ -->
+                <StackPanel Grid.Row="4" Margin="0,0,0,4">
                     <!-- Each part line is individually togglable -->
                     <Grid Margin="0,1,0,1" Visibility="{Binding Config.ShowPartHead, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                         <Grid.ColumnDefinitions>
@@ -453,8 +460,8 @@
                     </Grid>
                 </StackPanel>
 
-                <!-- ═══ Row 4: Ailments ═══ -->
-                <WrapPanel Grid.Row="4" Orientation="Horizontal">
+                <!-- ═══ Row 5: Ailments ═══ -->
+                <WrapPanel Grid.Row="5" Orientation="Horizontal">
                     <!-- Poison -> Id 0 -->
                     <Border CornerRadius="3" Background="#28FFFFFF" Padding="4,2" Margin="1" MinWidth="36"
                             Visibility="{Binding Config.ShowAilmentPoison, Mode=OneWay, Converter={StaticResource BoolToVis}}">

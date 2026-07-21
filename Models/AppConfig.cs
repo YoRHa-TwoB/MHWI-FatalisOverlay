@@ -11,6 +11,7 @@ public class AppConfig : INotifyPropertyChanged
     private bool _showCounterattack = true;
     private bool _showAiDecision = true;
     private bool _showBattleLog;
+    private bool _showThkPath;
     private bool _showQuestTimer = true;
     private bool _showDistance = true;
     private bool _showPlatform = true;
@@ -53,6 +54,7 @@ public class AppConfig : INotifyPropertyChanged
     public bool ShowDistance { get => _showDistance; set { _showDistance = value; OnPropertyChanged(); } }
     public bool ShowPlatform { get => _showPlatform; set { _showPlatform = value; OnPropertyChanged(); } }
     public bool ShowBattleLog { get => _showBattleLog; set { _showBattleLog = value; OnPropertyChanged(); } }
+    public bool ShowThkPath { get => _showThkPath; set { _showThkPath = value; OnPropertyChanged(); } }
 
     // Part toggles
     public bool ShowPartHead { get => _showPartHead; set { _showPartHead = value; OnPropertyChanged(); } }

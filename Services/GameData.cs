@@ -84,6 +84,16 @@ public class GameData
 
     // Platform detection (playerEntity +0x110C, bit21)
     public bool IsPlatform { get; set; }
+
+    // THK behavior tree path data (from injected DLL)
+    public List<Models.ThkCycleData> PendingThkCycles { get; set; } = new();
+    public Models.ThkCycleData? LastThkPath { get; set; }
+
+    /// <summary>
+    /// Diagnostic status for THK injection and tracking.
+    /// Shows the current state of the injection pipeline.
+    /// </summary>
+    public string ThkDiag { get; set; } = "";
 }
 
 public class FatalisPart
