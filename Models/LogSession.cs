@@ -115,19 +115,23 @@ public class LogSession
         {
             ce.SegmentCount = segs.GetArrayLength();
             ce.SegmentsJson = segs;
-            // Build summary using nack_map_full.json lookup
-            int cmRaw = -1, glRaw = -1;
+            // Build summary using nack_map_full.json lookup + last probability
+            int cmRaw = -1, glRaw = -1, lastProb = 0;
             foreach (var s in segs.EnumerateArray())
             {
                 int n = s.TryGetProperty("n", out var pn) ? pn.GetInt32() : -1;
                 int act = s.TryGetProperty("act", out var pa) ? pa.GetInt32() : 0;
                 int eThk = s.TryGetProperty("ext_thk", out var pe) ? pe.GetInt32() : 0;
+                int chk = s.TryGetProperty("c", out var pc) ? pc.GetInt32() : -1;
+                int p1 = s.TryGetProperty("p1", out var pp1) ? pp1.GetInt32() : 0;
                 if (eThk == 55 && n > 0) cmRaw = n;
                 if (act > 0 && eThk == 0) glRaw = n;
+                if (chk == 0 && p1 > 0) lastProb = p1;
             }
             string cm = cmRaw >= 0 && ThkCycleData.CmIdxToNack.TryGetValue(cmRaw, out var cn) ? $"node_{cn:D3}" : $"n_{cmRaw:D3}";
             string gl = glRaw >= 0 && ThkCycleData.GlobalIdxToNack.TryGetValue(glRaw, out var gn) ? $"Global.node_{gn:D3}" : $"G_{glRaw:D3}";
-            ce.PathSummary = cmRaw >= 0 && glRaw >= 0 ? $"{cm} → {gl}" : glRaw >= 0 ? gl : "";
+            string prob = lastProb > 0 ? $" [{lastProb}%]" : "";
+            ce.PathSummary = cmRaw >= 0 && glRaw >= 0 ? $"{cm} → {gl}{prob}" : glRaw >= 0 ? $"{gl}{prob}" : "";
         }
         return ce;
     }
