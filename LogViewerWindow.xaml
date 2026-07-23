@@ -124,6 +124,7 @@
                                                     <Run Text="{Binding TsDisplay, Mode=OneWay}" Foreground="#888"/>
                                                     <Run Text="] " Foreground="#666"/>
                                                     <Run Text="{Binding ActionTitle, Mode=OneWay}" Foreground="{Binding ColorCode, Mode=OneWay}"/>
+                                                    <Run Text="{Binding ThkProbText, Mode=OneWay}" Foreground="#FF9800" FontSize="10"/>
                                                     <Run Text="{Binding ActionPost, Mode=OneWay}" Foreground="#CCC"/>
                                                     <Run Text="  " Foreground="Transparent"/>
                                                     <Run Text="{Binding SpiritText, Mode=OneWay}" Foreground="{Binding SpiritColor, Mode=OneWay}" FontWeight="Bold"/>

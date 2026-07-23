@@ -69,6 +69,7 @@ public class LogSession
                     entry.ThkPath = best.PathSummary;
                     entry.ThkCycleId = best.CycleId;
                     entry.ThkSegmentsRaw = best.SegmentsJson;
+                    entry.ThkProbPct = best.ProbPct;
                 }
             }
 
@@ -130,8 +131,11 @@ public class LogSession
             }
             string cm = cmRaw >= 0 && ThkCycleData.CmIdxToNack.TryGetValue(cmRaw, out var cn) ? $"node_{cn:D3}" : $"n_{cmRaw:D3}";
             string gl = glRaw >= 0 && ThkCycleData.GlobalIdxToNack.TryGetValue(glRaw, out var gn) ? $"Global.node_{gn:D3}" : $"G_{glRaw:D3}";
-            string prob = lastProb > 0 ? $" [{lastProb}%]" : "";
-            ce.PathSummary = cmRaw >= 0 && glRaw >= 0 ? $"{cm} → {gl}{prob}" : glRaw >= 0 ? $"{gl}{prob}" : "";
+            // Suppress probability for excluded ActionIDs
+            if (ce.ActionIds.Count > 0 && ThkCycleData.NoProbActionIds.Contains(ce.ActionIds[^1]))
+                lastProb = 0;
+            ce.ProbPct = lastProb;
+            ce.PathSummary = cmRaw >= 0 && glRaw >= 0 ? $"{cm} → {gl}" : glRaw >= 0 ? gl : "";
         }
         return ce;
     }
@@ -168,6 +172,7 @@ public class ThkCycleEntry
     public int SegmentCount { get; set; }
     public System.Text.Json.JsonElement SegmentsJson { get; set; }
     public string PathSummary { get; set; } = "";
+    public int ProbPct { get; set; }
 }
 
 /// <summary>
@@ -225,6 +230,8 @@ public class LogEntry
     [System.Text.Json.Serialization.JsonPropertyName("thk_segments")]
     public System.Text.Json.JsonElement? ThkSegmentsRaw { get; set; }
 
+    public int ThkProbPct { get; set; }
+    public string ThkProbText => ThkProbPct > 0 ? $" [{ThkProbPct}%]" : "";
     public bool HasThkPath => !string.IsNullOrEmpty(ThkPath);
 
     /// <summary>Generate readable path lines for the expander panel (decision points only).</summary>
