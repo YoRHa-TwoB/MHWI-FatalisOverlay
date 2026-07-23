@@ -58,7 +58,9 @@ static uint16_t ReadU16(uintptr_t a){ __try { return *(uint16_t*)a; } __except(E
 
 static SafetyHookInline g_frameHook, g_thkHook;
 static uintptr_t g_gameBase; static HMODULE g_hMod; static bool g_initialized;
-static THK_Header* g_cachedHeader; static uintptr_t g_cachedThkAddr; static int g_cachedNodeCount;
+// Dual cache: CM and Global each have their own cached header, avoiding re-scan on every switch
+static THK_Header* g_cmHeader; static uintptr_t g_cmAddr; static int g_cmNc;
+static THK_Header* g_glHeader; static uintptr_t g_glAddr; static int g_glNc;
 static uint32_t g_cycleId, g_segCount, g_actCount; static PathSeg g_segs[MAX_SEG];
 static uint32_t g_actIds[8]; static bool g_cycleActive;
 
@@ -122,19 +124,28 @@ static ProcTHKSegFn g_origTHK;
 int HookProcTHKSeg(void* cThinkMgr, int* out, void* segment) {
     THK_Segment* seg = (THK_Segment*)segment; uintptr_t segAddr = (uintptr_t)seg;
 
+    // Dual cache: try CM first, then Global, scan only on miss
     THK_Header* header = nullptr; int nc = 0;
-    if (g_cachedHeader && segAddr >= g_cachedThkAddr && segAddr < g_cachedThkAddr + 0x200000)
-        { header = g_cachedHeader; nc = g_cachedNodeCount; }
     int binaryNi = -1, si = -1;
-    if (header) GetIndices(seg, header, &binaryNi, &si);
+    if (g_cmHeader && segAddr >= g_cmAddr && segAddr < g_cmAddr + 0x200000) {
+        GetIndices(seg, g_cmHeader, &binaryNi, &si);
+        if (binaryNi >= 0) { header = g_cmHeader; nc = g_cmNc; }
+    }
+    if (binaryNi == -1 && g_glHeader && segAddr >= g_glAddr && segAddr < g_glAddr + 0x200000) {
+        GetIndices(seg, g_glHeader, &binaryNi, &si);
+        if (binaryNi >= 0) { header = g_glHeader; nc = g_glNc; }
+    }
+    // Cache miss — scan for new header
     if (binaryNi == -1) {
-        header = nullptr; nc = 0;
         for (uintptr_t p = (segAddr & ~0xF); p > segAddr - 0x200000; p -= 0x10) {
             if (!IsValidPtr(p)) continue;
             if (ReadU32(p) == 0x004B4854) {
                 uint16_t v = ReadU16(p+4), n = ReadU16(p+6); uintptr_t nl = ReadPtr(p+0x18);
                 if (v > 0 && v <= 100 && n > 0 && n < 10000 && IsValidPtr(nl)) {
-                    g_cachedThkAddr = p; g_cachedHeader = (THK_Header*)p; g_cachedNodeCount = nc = n; header = g_cachedHeader; break;
+                    header = (THK_Header*)p; nc = n;
+                    if (nc >= 190)      { g_cmHeader = header; g_cmAddr = p; g_cmNc = nc; }
+                    else if (nc > 140)  { g_glHeader = header; g_glAddr = p; g_glNc = nc; }
+                    break;
                 }
             }
         }
