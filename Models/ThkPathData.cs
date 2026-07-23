@@ -17,7 +17,7 @@ public class ThkCycleData
     public static System.Collections.Generic.Dictionary<int, int> CmIdxToNack { get; set; } = [];
     public static System.Collections.Generic.Dictionary<int, int> GlobalIdxToNack { get; set; } = [];
     public static System.Collections.Generic.Dictionary<int, int> GlobalIdToNack { get; set; } = [];
-    public static System.Collections.Generic.HashSet<int> NoProbActionIds { get; set; } = [1, 306, 307, 308, 309];
+    public static System.Collections.Generic.HashSet<int> NoProbGlobalNodes { get; set; } = [];
 
     public string GetShortLabel()
     {
@@ -36,9 +36,11 @@ public class ThkCycleData
         string FmtCm(int r) => CmIdxToNack.TryGetValue(r, out var n) ? $"node_{n:D3}" : $"n_{r:D3}";
         string FmtG(int r) => GlobalIdxToNack.TryGetValue(r, out var n) ? $"Global.node_{n:D3}" : $"G_{r:D3}";
 
-        // Show last probability marker, unless excluded for this ActionID
+        // Show last probability marker, unless excluded for this Global node
         int lastProb = 0;
-        bool noProb = actions.Count > 0 && NoProbActionIds.Contains(actions[^1].aid);
+        bool noProb = actions.Count > 0
+            && GlobalIdxToNack.TryGetValue(actions[^1].rawNi, out var gn)
+            && NoProbGlobalNodes.Contains(gn);
         if (!noProb)
             for (int i = 0; i < Segments.Count; i++)
                 if (Segments[i].CheckType == 0 && Segments[i].Parameter1 > 0)
