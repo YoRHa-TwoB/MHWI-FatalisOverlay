@@ -143,8 +143,9 @@ int HookProcTHKSeg(void* cThinkMgr, int* out, void* segment) {
                 uint16_t v = ReadU16(p+4), n = ReadU16(p+6); uintptr_t nl = ReadPtr(p+0x18);
                 if (v > 0 && v <= 100 && n > 0 && n < 10000 && IsValidPtr(nl)) {
                     header = (THK_Header*)p; nc = n;
-                    if (nc >= 190)      { g_cmHeader = header; g_cmAddr = p; g_cmNc = nc; }
-                    else if (nc > 140)  { g_glHeader = header; g_glAddr = p; g_glNc = nc; }
+                    if (nc >= 190)                    { g_cmHeader = header; g_cmAddr = p; g_cmNc = nc; }
+                    else if (nc > 140 && nc <= 160)  { g_glHeader = header; g_glAddr = p; g_glNc = nc; }
+                    // other THKs (Combat_Enter etc.) → not cached, just used this once
                     break;
                 }
             }
@@ -152,8 +153,9 @@ int HookProcTHKSeg(void* cThinkMgr, int* out, void* segment) {
         if (header) GetIndices(seg, header, &binaryNi, &si);
     }
 
-    bool isCombatMain = (nc >= 190);
-    bool isGlobal = (nc > 140 && nc <= 160);
+    // Determine THK type from which cache was hit (not nc)
+    bool isCombatMain = (header == g_cmHeader);
+    bool isGlobal = (header == g_glHeader);
     bool isNode0Seg0 = (binaryNi == 0 && si == 0);
 
     if (isNode0Seg0 && isCombatMain) {
