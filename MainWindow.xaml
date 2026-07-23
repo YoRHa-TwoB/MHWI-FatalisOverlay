@@ -6,6 +6,7 @@
         Title="Fatalis Overlay"
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True"
+        Opacity="{Binding Config.Opacity, Mode=OneWay}"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         MinWidth="240" MinHeight="60"

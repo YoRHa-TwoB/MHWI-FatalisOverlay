@@ -131,9 +131,11 @@ public class LogSession
             }
             string cm = cmRaw >= 0 && ThkCycleData.CmIdxToNack.TryGetValue(cmRaw, out var cn) ? $"node_{cn:D3}" : $"n_{cmRaw:D3}";
             string gl = glRaw >= 0 && ThkCycleData.GlobalIdxToNack.TryGetValue(glRaw, out var gn) ? $"Global.node_{gn:D3}" : $"G_{glRaw:D3}";
-            // Suppress probability for excluded Global nodes
+            // Suppress probability: Global-wide OR (cm,global) pair
             if (glRaw >= 0 && ThkCycleData.GlobalIdxToNack.TryGetValue(glRaw, out var gnn)
-                && ThkCycleData.NoProbGlobalNodes.Contains(gnn))
+                && (ThkCycleData.NoProbGlobalNodes.Contains(gnn)
+                    || (cmRaw >= 0 && ThkCycleData.CmIdxToNack.TryGetValue(cmRaw, out var cnn)
+                        && ThkCycleData.NoProbPairs.Contains((cnn, gnn)))))
                 lastProb = 0;
             ce.ProbPct = lastProb;
             ce.PathSummary = cmRaw >= 0 && glRaw >= 0 ? $"{cm} → {gl}" : glRaw >= 0 ? gl : "";

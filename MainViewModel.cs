@@ -40,7 +40,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nack_map_full.json");
+            var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "nack_map_full.json");
             if (!System.IO.File.Exists(path)) return;
             var json = System.IO.File.ReadAllText(path);
             var map = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);

@@ -14,9 +14,11 @@
   <ItemGroup>
     <None Update="action_names.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>data\action_names.json</TargetPath>
     </None>
     <None Update="nack_map_full.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>data\nack_map_full.json</TargetPath>
     </None>
   </ItemGroup>
 

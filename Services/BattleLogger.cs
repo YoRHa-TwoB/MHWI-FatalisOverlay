@@ -35,7 +35,7 @@ public static class BattleLogger
     {
         try
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "action_names.json");
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "action_names.json");
             if (File.Exists(path))
             {
                 var json = File.ReadAllText(path);

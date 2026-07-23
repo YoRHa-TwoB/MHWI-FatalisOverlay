@@ -40,11 +40,12 @@ public class AppConfig : INotifyPropertyChanged
     private double _windowX = 100;
     private double _windowY = 100;
     private double _scale = 1.0;
+    private double _opacity = 0.85;
     private string _healthColor = "#4CAF50";
     private string _counterattackColor = "#FF9800";
     private string _partColor = "#2196F3";
     private string _backgroundColor = "#CC1A1A1A";
-    private int _pollingRateMs = 28;
+    private int _pollingRateMs = 16;
 
     // Display toggles
     public bool ShowHealth { get => _showHealth; set { _showHealth = value; OnPropertyChanged(); } }
@@ -81,6 +82,7 @@ public class AppConfig : INotifyPropertyChanged
     public double WindowX { get => _windowX; set { _windowX = value; OnPropertyChanged(); } }
     public double WindowY { get => _windowY; set { _windowY = value; OnPropertyChanged(); } }
     public double Scale { get => _scale; set { _scale = value; OnPropertyChanged(); } }
+    public double Opacity { get => _opacity; set { _opacity = value; OnPropertyChanged(); } }
     public string HealthColor { get => _healthColor; set { _healthColor = value; OnPropertyChanged(); } }
     public string CounterattackColor { get => _counterattackColor; set { _counterattackColor = value; OnPropertyChanged(); } }
     public string PartColor { get => _partColor; set { _partColor = value; OnPropertyChanged(); } }
@@ -92,7 +94,7 @@ public class AppConfig : INotifyPropertyChanged
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     private static readonly string ConfigPath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        AppDomain.CurrentDomain.BaseDirectory, "data", "config.json");
 
     public static AppConfig Load()
     {

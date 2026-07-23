@@ -119,6 +119,18 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80"/>
                     <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="透明度" Foreground="#FFE0E0E0" VerticalAlignment="Center"/>
+                <Slider Grid.Column="1" Minimum="0.2" Maximum="1.0" Value="{Binding Config.Opacity}"
+                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+            </Grid>
+            <TextBlock Text="{Binding Config.Opacity, StringFormat={}当前: {0:P0}}"
+                       Foreground="#888" FontSize="10" Margin="84,0,0,2"/>
+
+            <Grid Margin="4,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="60"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="刷新间隔" Foreground="#FFE0E0E0" VerticalAlignment="Center"/>
